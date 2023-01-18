@@ -12,7 +12,6 @@ import {
   UserSearchCriteriaSchema,
   UserTokenModel,
 } from '../models/users.model'
-import { ObjectId } from 'mongodb'
 
 /**
  * Création du plugin des utilisateurs
@@ -46,6 +45,8 @@ export default async function users(app: FastifyInstance) {
         _id: result?.insertedId,
       })
 
+      console.log(user);
+      
       // on ajoute le code reponse
       response.code(201)
 
@@ -66,6 +67,9 @@ export default async function users(app: FastifyInstance) {
       },
     },
     async request => {
+      // Je vérifie de bien recevoir un jeton de connexion
+      await request.jwtVerify()
+      
       //On recupere les criteres de recherche qui sont dans les queries
       const criterias = UserSearchCriteriaModel.parse(request.query)
 
@@ -103,7 +107,6 @@ export default async function users(app: FastifyInstance) {
       password: userCredential.password,
     })
 
-    console.log('userExist ==', userExist)
     if (userExist) {
       //-3 On s'assure que les donnnes de la base de donnes correspondent bien
       // à notre model dans la reponse envoyee
@@ -114,7 +117,6 @@ export default async function users(app: FastifyInstance) {
         token: app.jwt.sign({ _id: user._id, email: user.email }),
       })
 
-      return
     } else {
       response.code(400)
       return {
